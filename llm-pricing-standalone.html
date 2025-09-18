@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LLM Pricing Coverage - Standalone</title>
+
+    <!-- Embedded reveal.js CSS -->
+    <style>
+        /* Minimal reveal.js CSS - embedded */
+        html.reveal-full-page{width:100%;height:100%;overflow:hidden}.reveal-viewport{height:100%;overflow:hidden;position:relative;line-height:1;margin:0;background-color:#fff;color:#000}.reveal{position:relative;width:100%;height:100%;overflow:hidden}.reveal .slides{position:absolute;width:100%;height:100%;top:0;right:0;bottom:0;left:0;margin:auto;pointer-events:none;overflow:visible;z-index:1;text-align:center;perspective:600px;perspective-origin:50% 40%}.reveal .slides>section{perspective:600px}.reveal .slides>section,.reveal .slides>section>section{display:none;position:absolute;width:100%;pointer-events:auto;z-index:10;transform-style:flat;transition:transform .8s cubic-bezier(.26,.86,.44,.985),opacity .8s cubic-bezier(.26,.86,.44,.985)}.reveal .slides>section.present,.reveal .slides>section>section.present{display:block;z-index:11;opacity:1}.reveal .slides>section.future,.reveal .slides>section.past{opacity:0}.reveal .slides>section[data-transition=slide].past{transform:translate(-150%,0)}.reveal .slides>section[data-transition=slide].future{transform:translate(150%,0)}.reveal.slide .slides>section:not([data-transition]).past{transform:translate(-150%,0)}.reveal.slide .slides>section:not([data-transition]).future{transform:translate(150%,0)}.reveal .fragment{transition:all .2s ease}.reveal .fragment:not(.custom){opacity:0;visibility:hidden}.reveal .fragment.visible{opacity:1;visibility:inherit}.reveal .fragment.fade-in{opacity:0;visibility:hidden}.reveal .fragment.fade-in.visible{opacity:1;visibility:inherit}.reveal .controls{display:none;position:absolute;top:auto;bottom:12px;right:12px;left:auto;z-index:11;color:#000;pointer-events:none;font-size:10px}.reveal .controls button{position:absolute;padding:0;background-color:transparent;border:0;outline:0;cursor:pointer;color:currentColor;transform:scale(.9999);transition:color .2s ease,opacity .2s ease,transform .2s ease;z-index:2;pointer-events:auto;font-size:inherit;visibility:hidden;opacity:0}.reveal .controls .enabled{visibility:visible;opacity:.9;cursor:pointer;transform:none}.reveal .controls .enabled:hover{opacity:1}.reveal .progress{position:absolute;display:none;height:3px;width:100%;bottom:0;left:0;z-index:10;background-color:rgba(0,0,0,.2);color:#fff}.reveal .progress span{display:block;height:100%;width:100%;background-color:currentColor;transition:transform .8s cubic-bezier(.26,.86,.44,.985);transform-origin:0 0;transform:scaleX(0)}
+
+        /* Adwaita theme styling */
+        :root {
+            --adwaita-blue: #1c71d8;
+            --adwaita-light-blue: #99c1f1;
+            --adwaita-dark-blue: #1a5fb4;
+            --adwaita-gray: #deddda;
+            --adwaita-dark-gray: #77767b;
+            --adwaita-text: #2e3436;
+            --adwaita-background: #ffffff;
+            --adwaita-surface: #fafafa;
+            --adwaita-border: #cdcdcd;
+            --adwaita-accent: #3584e4;
+            --explain-arrow-size: 8px;
+            --explain-arrow-color: #1c71d8;
+        }
+
+        .reveal {
+            font-family: 'Cantarell', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 24px;
+            background: var(--adwaita-background);
+            color: var(--adwaita-text);
+        }
+
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+            color: var(--adwaita-text);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+        }
+
+        .reveal h1 {
+            font-size: 2.5em;
+            color: var(--adwaita-blue);
+            margin-bottom: 0.5em;
+        }
+
+        .reveal h2 {
+            font-size: 1.8em;
+            color: var(--adwaita-dark-blue);
+            margin-bottom: 0.6em;
+        }
+
+        .reveal h3 {
+            font-size: 1.4em;
+            color: var(--adwaita-accent);
+        }
+
+        .reveal .slides section {
+            padding: 40px;
+            background: var(--adwaita-surface);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 20px;
+        }
+
+        .reveal ul, .reveal ol {
+            margin: 1em 0;
+        }
+
+        .reveal li {
+            margin: 0.5em 0;
+            padding-left: 0.5em;
+        }
+
+        .reveal ul li::marker {
+            color: var(--adwaita-accent);
+        }
+
+        .reveal table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--adwaita-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .reveal th {
+            background: var(--adwaita-light-blue);
+            color: var(--adwaita-text);
+            font-weight: 600;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            border-bottom: 2px solid var(--adwaita-blue);
+        }
+
+        .reveal td {
+            text-align: center;
+            padding: 10px 12px;
+            font-size: 1em;
+            border-bottom: 1px solid var(--adwaita-gray);
+        }
+
+        .reveal tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+
+        .reveal tr:hover td {
+            background: var(--adwaita-light-blue);
+            transition: background-color 0.2s ease;
+        }
+
+        .simple-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 30%;
+            max-width: 350px;
+            margin-bottom: 40px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .bar-value {
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--adwaita-text);
+        }
+
+        .bar-fill {
+            width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.5s ease;
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 10px;
+            text-align: center;
+            color: var(--adwaita-dark-gray);
+        }
+
+        .pie-chart {
+            width: 150px;
+            height: 150px;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .pie-slice {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+
+        .fit-table {
+            font-family: 'Cantarell', system-ui, sans-serif;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fit-table th, .fit-table td {
+            padding: 8px 12px;
+            font-size: 11px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .fit-table th {
+            background: var(--adwaita-blue);
+            color: white;
+            font-weight: 600;
+        }
+
+        .mistral-col {
+            background: var(--adwaita-accent) !important;
+            color: white !important;
+        }
+
+        .fragment.visible + .table-wrapper .mistral-col {
+            background: linear-gradient(135deg, var(--adwaita-blue), var(--adwaita-accent)) !important;
+            border: 2px solid var(--adwaita-dark-blue);
+            box-shadow: 0 0 10px rgba(28, 113, 216, 0.3);
+        }
+
+        .fragment.visible + .table-wrapper .fit-table td:not(.mistral-col),
+        .fragment.visible + .table-wrapper .fit-table th:not(.mistral-col) {
+            opacity: 0.5;
+            filter: grayscale(0.3);
+        }
+
+        .explain {
+            position: relative;
+            display: inline-block;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, var(--adwaita-blue), var(--adwaita-accent)) !important;
+            color: white !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(28, 113, 216, 0.3) !important;
+            font-weight: 500;
+            border: 1px solid var(--adwaita-light-blue);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .explain::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .explain.arrow-down::after {
+            left: 30%;
+            transform: translateX(-50%);
+            bottom: calc(-1 * var(--explain-arrow-size));
+            border-width: var(--explain-arrow-size) var(--explain-arrow-size) 0 var(--explain-arrow-size);
+            border-color: var(--explain-arrow-color) transparent transparent transparent;
+        }
+
+        .explain.arrow-left::after {
+            top: 30%;
+            transform: translateY(-50%);
+            left: calc(-1 * var(--explain-arrow-size));
+            border-width: var(--explain-arrow-size) var(--explain-arrow-size) var(--explain-arrow-size) 0;
+            border-color: transparent var(--explain-arrow-color) transparent transparent;
+        }
+
+        .explain.arrow-right::after {
+            top: 50%;
+            transform: translateY(-50%);
+            right: calc(-1 * var(--explain-arrow-size));
+            border-width: var(--explain-arrow-size) 0 var(--explain-arrow-size) var(--explain-arrow-size);
+            border-color: transparent transparent transparent var(--explain-arrow-color);
+        }
+
+        .reveal img {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Navigation styles */
+        .nav-button {
+            position: fixed;
+            z-index: 100;
+            background: var(--adwaita-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-button:hover {
+            background: var(--adwaita-dark-blue);
+            transform: scale(1.1);
+        }
+
+        .nav-prev {
+            bottom: 30px;
+            left: 30px;
+        }
+
+        .nav-next {
+            bottom: 30px;
+            right: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal-viewport">
+        <div class="reveal slide">
+            <div class="slides">
+                <section>
+                    <h1>Improving Pricing Coverage of Small Chains using LLMs</h1>
+                    <p>A proof of concept; status & next steps</p>
+                </section>
+
+                <section>
+                    <h2>The Problem</h2>
+                    <ul>
+                        <li>Many small chains</li>
+                        <li>Difficult to create many small individual scrapers (diminishing returns)</li>
+                    </ul>
+                    <h2>The Idea</h2>
+                    <ul>
+                        <li>Using LLMs to create automated scrapers that can pick up the pricing info</li>
+                    </ul>
+                    <p>This concept can be spread to other domains wherever the data is semi-structured or structured.</p>
+                </section>
+
+                <section>
+                    <div style="position: relative; width: 100%; height: 100%; color:var(--adwaita-gray)">
+                        <img src="./res/scr1.png" style="width: 100%;">
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Extracted Data</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>5x5</td><td>20</td></tr>
+                            <tr><td>5x5</td><td>30</td></tr>
+                            <tr><td>5x10</td><td>30</td></tr>
+                            <tr><td>10x5</td><td>32</td></tr>
+                            <tr><td>5x15</td><td>36</td></tr>
+                            <tr><td>7.5x10</td><td>42</td></tr>
+                            <tr><td>10x10</td><td>55</td></tr>
+                            <tr><td>10x20</td><td>165</td></tr>
+                            <tr><td>10x20</td><td>175</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section>
+                    <div style="position: relative; width: 100%; height: 100%; color:var(--adwaita-gray)">
+                        <img src="./res/scr3.png" style="width: 100%;">
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Extracted Data</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>5x5</td><td>40</td></tr>
+                            <tr><td>5x8</td><td>65</td></tr>
+                            <tr><td>5x10</td><td>32</td></tr>
+                            <tr><td>5x10</td><td>53</td></tr>
+                            <tr><td>8x10</td><td>95</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section>
+                    <p>In total there are more than 10,000 such sites. We implemented a PoC that ran on 100 randomly selected sites.</p>
+                </section>
+
+                <section>
+                    <p>Key Findings</p>
+                    <ul>
+                        <li>LLMs can extract structured data</li>
+                        <li>Automation reduces engineering effort</li>
+                        <li>Works across many domains</li>
+                    </ul>
+
+                    <div style="display: flex; justify-content: space-around; margin-bottom: 30px;">
+                        <div class="simple-chart">
+                            <span style="margin-bottom: 5px; color: var(--adwaita-dark-gray); font-size: 0.5em; font-weight: 500;">Model Accuracy (%)</span>
+                            <div class="bar-chart">
+                                <div class="bar">
+                                    <div class="bar-value">82.3%</div>
+                                    <div class="bar-fill" style="height: 164px; background: var(--adwaita-blue);"></div>
+                                    <div class="bar-label">Mistral 7B</div>
+                                </div>
+                                <div class="bar">
+                                    <div class="bar-value">55.1%</div>
+                                    <div class="bar-fill" style="height: 110px; background: var(--adwaita-accent);"></div>
+                                    <div class="bar-label">Gemma3 4B</div>
+                                </div>
+                                <div class="bar">
+                                    <div class="bar-value">23.7%</div>
+                                    <div class="bar-fill" style="height: 47px; background: var(--adwaita-dark-blue);"></div>
+                                    <div class="bar-label">Gemma3 1B</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="simple-chart">
+                            <span style="margin-bottom: 5px; color: var(--adwaita-dark-gray); font-size: 0.5em; font-weight: 500;">Mistral 7B Accuracy</span>
+                            <div class="pie-chart">
+                                <div class="pie-slice" style="background: conic-gradient(var(--adwaita-blue) 0deg 295deg, var(--adwaita-accent) 295deg 360deg);">
+                                    <div style="position: absolute; top: 35%; left: 45%; color: white;">82%</div>
+                                    <div style="position: absolute; top: 65%; right: 25%; color: white; font-size: 12px;">18%</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 15px; margin-top: 10px; font-size: 10px;">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <div style="width: 12px; height: 12px; background: var(--adwaita-blue); border-radius: 50%;"></div>
+                                    <span>Success</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <div style="width: 12px; height: 12px; background: var(--adwaita-accent); border-radius: 50%;"></div>
+                                    <span>Failed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>Comparison Table</h3>
+                    <table class="fit-table" style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; text-align:center;" border="1">
+                        <thead>
+                            <tr>
+                                <th colspan="3">Manual</th>
+                                <th colspan="2" class="mistral-col">Mistral 7B</th>
+                                <th colspan="2">Gemma 3 1B</th>
+                                <th colspan="2">Gemma 3 4B</th>
+                            </tr>
+                            <tr>
+                                <th>Price</th><th>Length</th><th>Width</th>
+                                <th class="mistral-col">Price</th><th class="mistral-col">Size</th>
+                                <th>Price</th><th>Size</th>
+                                <th>Price</th><th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>56</td><td>8</td><td>10</td><td class="mistral-col">56</td><td class="mistral-col">8 × 10</td><td>49</td><td>5 × 15</td><td>56</td><td>8 × 10</td></tr>
+                            <tr><td>59</td><td>10</td><td>10</td><td class="mistral-col">59</td><td class="mistral-col">10 × 10</td><td>51.5</td><td>5 × 5</td><td>59</td><td>10 × 10</td></tr>
+                            <tr><td>77</td><td>10</td><td>14</td><td class="mistral-col">77</td><td class="mistral-col">10 × 14</td><td>54.5</td><td>5 × 10</td><td>77</td><td>10 × 14</td></tr>
+                            <tr><td>122</td><td>10</td><td>30</td><td class="mistral-col">122</td><td class="mistral-col">10 × 30</td><td>62</td><td>5 × 10</td><td>122</td><td>10 × 30</td></tr>
+                            <tr><td>70</td><td>5</td><td>5</td><td class="mistral-col">70</td><td class="mistral-col">5 × 5</td><td>68</td><td>5 × 15</td><td>70</td><td>5 × 5</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section>
+                    <img src="res/dia.png" alt="Diagram" style="width:70%;">
+                    <div class="explain arrow-right" style="position:absolute; top:20%; left:5%; padding:10px 15px;">
+                        URLs from DB
+                    </div>
+                    <div class="explain arrow-down" style="position:absolute; top:10%; left:30%; padding:10px 15px;">
+                        Browser automation
+                    </div>
+                    <div class="explain arrow-down" style="position:absolute; top:10%; left:60%; padding:10px 15px;">
+                        Local LLM models
+                    </div>
+                    <div class="explain arrow-left" style="position:absolute; top:50%; right:5%; padding:10px 15px;">
+                        Data extraction
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Where PoC Fails to Deliver</h2>
+                    <ul>
+                        <li>URLs in the DB that do not point to pricing page</li>
+                        <li>Content that is dynamically loaded using JavaScript</li>
+                        <li>Complex designs that confuse the models</li>
+                    </ul>
+                    <p>If optimised, hallucinations induced due to these factors can be reduced.</p>
+                </section>
+
+                <section>
+                    <h3>Going from the PoC to the product</h3>
+                    <ul>
+                        <li>Improving headless browser to asynchronously load content</li>
+                        <li>Improving headless browser to click pricing button if prices are not present on the page</li>
+                        <li>Store hashes of the website to skip unchanged websites</li>
+                        <li>Optimise the prompt given to LLM to better extract the data</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <div>
+                        <h1 style="margin-bottom: 1em;">Thank You!</h1>
+                        <h3>Questions & Discussion</h3>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <button class="nav-button nav-prev" onclick="previousSlide()">‹</button>
+    <button class="nav-button nav-next" onclick="nextSlide()">›</button>
+
+    <!-- Minimal reveal.js functionality -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slides section');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('present', 'past', 'future');
+                if (i === index) {
+                    slide.classList.add('present');
+                } else if (i < index) {
+                    slide.classList.add('past');
+                } else {
+                    slide.classList.add('future');
+                }
+            });
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(currentSlide);
+
+        // Handle fragments (simplified)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('fragment')) {
+                e.target.classList.add('visible');
+            }
+        });
+    </script>
+</body>
+</html>

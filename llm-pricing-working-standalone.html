@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LLM Pricing Coverage - Working Standalone</title>
+
+    <style>
+        /* Reset and basic styles */
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Cantarell', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Adwaita theme variables */
+        :root {
+            --adwaita-blue: #1c71d8;
+            --adwaita-light-blue: #99c1f1;
+            --adwaita-dark-blue: #1a5fb4;
+            --adwaita-gray: #deddda;
+            --adwaita-dark-gray: #77767b;
+            --adwaita-text: #2e3436;
+            --adwaita-background: #ffffff;
+            --adwaita-surface: #fafafa;
+            --adwaita-border: #cdcdcd;
+            --adwaita-accent: #3584e4;
+        }
+
+        /* Presentation container */
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            background: var(--adwaita-background);
+            color: var(--adwaita-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 24px;
+        }
+
+        /* Slide container */
+        .slides-container {
+            width: 90%;
+            height: 90%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Individual slides */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+            background: var(--adwaita-surface);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+
+        /* Typography */
+        .slide h1 {
+            font-size: 2.5em;
+            color: var(--adwaita-blue);
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .slide h2 {
+            font-size: 1.8em;
+            color: var(--adwaita-dark-blue);
+            margin-bottom: 0.6em;
+            font-weight: 600;
+        }
+
+        .slide h3 {
+            font-size: 1.4em;
+            color: var(--adwaita-accent);
+            font-weight: 600;
+        }
+
+        .slide ul {
+            text-align: left;
+            max-width: 800px;
+            margin: 1em auto;
+        }
+
+        .slide li {
+            margin: 0.5em 0;
+            padding-left: 0.5em;
+        }
+
+        .slide ul li::marker {
+            color: var(--adwaita-accent);
+        }
+
+        /* Tables */
+        .slide table {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--adwaita-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .slide th {
+            background: var(--adwaita-light-blue);
+            color: var(--adwaita-text);
+            font-weight: 600;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            border-bottom: 2px solid var(--adwaita-blue);
+        }
+
+        .slide td {
+            text-align: center;
+            padding: 10px 12px;
+            font-size: 1em;
+            border-bottom: 1px solid var(--adwaita-gray);
+        }
+
+        .slide tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+
+        /* Images */
+        .slide img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Charts */
+        .charts-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .simple-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 300px;
+            margin: 10px;
+        }
+
+        .chart-title {
+            margin-bottom: 10px;
+            color: var(--adwaita-dark-gray);
+            font-size: 0.7em;
+            font-weight: 500;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .bar-value {
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--adwaita-text);
+        }
+
+        .bar-fill {
+            width: 40px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 10px;
+            text-align: center;
+            color: var(--adwaita-dark-gray);
+        }
+
+        .pie-chart {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--adwaita-blue) 0deg 295deg, var(--adwaita-accent) 295deg 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .pie-labels {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 10px;
+        }
+
+        .pie-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pie-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Navigation */
+        .nav-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: var(--adwaita-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn:hover {
+            background: var(--adwaita-dark-blue);
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            background: var(--adwaita-gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Slide counter */
+        .slide-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+        }
+
+        /* Comparison table specific styles */
+        .comparison-table {
+            font-size: 11px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 8px 6px;
+            font-size: 10px;
+        }
+
+        .mistral-col {
+            background: var(--adwaita-accent) !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        /* Diagram explanations */
+        .diagram-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .explain {
+            position: absolute;
+            background: linear-gradient(135deg, var(--adwaita-blue), var(--adwaita-accent));
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            max-width: 150px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .presentation {
+                font-size: 18px;
+            }
+
+            .slide {
+                padding: 20px;
+            }
+
+            .slide h1 {
+                font-size: 2em;
+            }
+
+            .charts-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .simple-chart {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <div class="slides-container">
+            <!-- Slide 1: Title -->
+            <div class="slide active">
+                <h1>Improving Pricing Coverage of Small Chains using LLMs</h1>
+                <p>A proof of concept; status & next steps</p>
+            </div>
+
+            <!-- Slide 2: Problem & Idea -->
+            <div class="slide">
+                <h2>The Problem</h2>
+                <ul>
+                    <li>Many small chains</li>
+                    <li>Difficult to create many small individual scrapers (diminishing returns)</li>
+                </ul>
+                <h2>The Idea</h2>
+                <ul>
+                    <li>Using LLMs to create automated scrapers that can pick up the pricing info</li>
+                </ul>
+                <p>This concept can be spread to other domains wherever the data is semi-structured or structured.</p>
+            </div>
+
+            <!-- Slide 3: Screenshot 1 -->
+            <div class="slide">
+                <img src="./res/scr1.png" alt="Screenshot 1">
+            </div>
+
+            <!-- Slide 4: Extracted Data 1 -->
+            <div class="slide">
+                <h2>Extracted Data</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Size</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>5x5</td><td>20</td></tr>
+                        <tr><td>5x5</td><td>30</td></tr>
+                        <tr><td>5x10</td><td>30</td></tr>
+                        <tr><td>10x5</td><td>32</td></tr>
+                        <tr><td>5x15</td><td>36</td></tr>
+                        <tr><td>7.5x10</td><td>42</td></tr>
+                        <tr><td>10x10</td><td>55</td></tr>
+                        <tr><td>10x20</td><td>165</td></tr>
+                        <tr><td>10x20</td><td>175</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Slide 5: Screenshot 3 -->
+            <div class="slide">
+                <img src="./res/scr3.png" alt="Screenshot 3">
+            </div>
+
+            <!-- Slide 6: Extracted Data 2 -->
+            <div class="slide">
+                <h2>Extracted Data</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Size</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>5x5</td><td>40</td></tr>
+                        <tr><td>5x8</td><td>65</td></tr>
+                        <tr><td>5x10</td><td>32</td></tr>
+                        <tr><td>5x10</td><td>53</td></tr>
+                        <tr><td>8x10</td><td>95</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Slide 7: Sites info -->
+            <div class="slide">
+                <p>In total there are more than 10,000 such sites. We implemented a PoC that ran on 100 randomly selected sites.</p>
+            </div>
+
+            <!-- Slide 8: Key Findings with Charts -->
+            <div class="slide">
+                <h2>Key Findings</h2>
+                <ul>
+                    <li>LLMs can extract structured data</li>
+                    <li>Automation reduces engineering effort</li>
+                    <li>Works across many domains</li>
+                </ul>
+
+                <div class="charts-container">
+                    <div class="simple-chart">
+                        <div class="chart-title">Model Accuracy (%)</div>
+                        <div class="bar-chart">
+                            <div class="bar">
+                                <div class="bar-value">82.3%</div>
+                                <div class="bar-fill" style="height: 164px; background: var(--adwaita-blue);"></div>
+                                <div class="bar-label">Mistral 7B</div>
+                            </div>
+                            <div class="bar">
+                                <div class="bar-value">55.1%</div>
+                                <div class="bar-fill" style="height: 110px; background: var(--adwaita-accent);"></div>
+                                <div class="bar-label">Gemma3 4B</div>
+                            </div>
+                            <div class="bar">
+                                <div class="bar-value">23.7%</div>
+                                <div class="bar-fill" style="height: 47px; background: var(--adwaita-dark-blue);"></div>
+                                <div class="bar-label">Gemma3 1B</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="simple-chart">
+                        <div class="chart-title">Mistral 7B Accuracy</div>
+                        <div class="pie-chart">
+                            <div style="position: absolute; color: white; font-weight: bold;">82%</div>
+                        </div>
+                        <div class="pie-labels">
+                            <div class="pie-label">
+                                <div class="pie-color" style="background: var(--adwaita-blue);"></div>
+                                <span>Success (82%)</span>
+                            </div>
+                            <div class="pie-label">
+                                <div class="pie-color" style="background: var(--adwaita-accent);"></div>
+                                <span>Failed (18%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 9: Comparison Table -->
+            <div class="slide">
+                <h3>Comparison Table</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3">Manual</th>
+                            <th colspan="2" class="mistral-col">Mistral 7B</th>
+                            <th colspan="2">Gemma 3 1B</th>
+                            <th colspan="2">Gemma 3 4B</th>
+                        </tr>
+                        <tr>
+                            <th>Price</th><th>Length</th><th>Width</th>
+                            <th class="mistral-col">Price</th><th class="mistral-col">Size</th>
+                            <th>Price</th><th>Size</th>
+                            <th>Price</th><th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>56</td><td>8</td><td>10</td><td class="mistral-col">56</td><td class="mistral-col">8 × 10</td><td>49</td><td>5 × 15</td><td>56</td><td>8 × 10</td></tr>
+                        <tr><td>59</td><td>10</td><td>10</td><td class="mistral-col">59</td><td class="mistral-col">10 × 10</td><td>51.5</td><td>5 × 5</td><td>59</td><td>10 × 10</td></tr>
+                        <tr><td>77</td><td>10</td><td>14</td><td class="mistral-col">77</td><td class="mistral-col">10 × 14</td><td>54.5</td><td>5 × 10</td><td>77</td><td>10 × 14</td></tr>
+                        <tr><td>122</td><td>10</td><td>30</td><td class="mistral-col">122</td><td class="mistral-col">10 × 30</td><td>62</td><td>5 × 10</td><td>122</td><td>10 × 30</td></tr>
+                        <tr><td>70</td><td>5</td><td>5</td><td class="mistral-col">70</td><td class="mistral-col">5 × 5</td><td>68</td><td>5 × 15</td><td>70</td><td>5 × 5</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Slide 10: Diagram -->
+            <div class="slide">
+                <div class="diagram-container">
+                    <img src="res/dia.png" alt="Diagram" style="width: 70%;">
+                    <div class="explain" style="top: 15%; left: 10%;">URLs from DB</div>
+                    <div class="explain" style="top: 5%; left: 35%;">Browser automation</div>
+                    <div class="explain" style="top: 5%; left: 60%;">Local LLM models</div>
+                    <div class="explain" style="top: 60%; right: 10%;">Data extraction</div>
+                </div>
+            </div>
+
+            <!-- Slide 11: Failures -->
+            <div class="slide">
+                <h2>Where PoC Fails to Deliver</h2>
+                <ul>
+                    <li>URLs in the DB that do not point to pricing page</li>
+                    <li>Content that is dynamically loaded using JavaScript</li>
+                    <li>Complex designs that confuse the models</li>
+                </ul>
+                <p>If optimised, hallucinations induced due to these factors can be reduced.</p>
+            </div>
+
+            <!-- Slide 12: Future -->
+            <div class="slide">
+                <h3>Going from the PoC to the product</h3>
+                <ul>
+                    <li>Improving headless browser to asynchronously load content</li>
+                    <li>Improving headless browser to click pricing button if prices are not present on the page</li>
+                    <li>Store hashes of the website to skip unchanged websites</li>
+                    <li>Optimise the prompt given to LLM to better extract the data</li>
+                </ul>
+            </div>
+
+            <!-- Slide 13: Thank you -->
+            <div class="slide">
+                <h1>Thank You!</h1>
+                <h3>Questions & Discussion</h3>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-container">
+            <button class="nav-btn" onclick="previousSlide()" id="prevBtn">‹</button>
+            <button class="nav-btn" onclick="nextSlide()" id="nextBtn">›</button>
+        </div>
+
+        <!-- Slide counter -->
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">13</span>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlideSpan = document.getElementById('currentSlide');
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i === index) {
+                    slide.classList.add('active');
+                } else if (i < index) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            currentSlideSpan.textContent = index + 1;
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(currentSlideIndex);
+    </script>
+</body>
+</html>

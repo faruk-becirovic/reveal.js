@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>LLM Pricing Coverage - Adwaita</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/white.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+                <style>
+                 /* Adwaita-inspired theme styling */
+                 :root {
+                     --adwaita-blue: #1c71d8;
+                     --adwaita-light-blue: #99c1f1;
+                     --adwaita-dark-blue: #1a5fb4;
+                     --adwaita-gray: #deddda;
+                     --adwaita-dark-gray: #77767b;
+                     --adwaita-text: #2e3436;
+                     --adwaita-background: #ffffff;
+                     --adwaita-surface: #fafafa;
+                     --adwaita-border: #cdcdcd;
+                     --adwaita-accent: #3584e4;
+                     --explain-arrow-size: 8px;
+                     --explain-arrow-color: #1c71d8;
+                 }
+
+                 .reveal {
+                     font-family: 'Cantarell', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+                     font-size: 24px;
+                     background: var(--adwaita-background);
+                     color: var(--adwaita-text);
+                 }
+
+                 .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+                     color: var(--adwaita-text);
+                     font-weight: 600;
+                     line-height: 1.2;
+                     letter-spacing: -0.01em;
+                 }
+
+                 .reveal h1 {
+                     font-size: 2.5em;
+                     color: var(--adwaita-blue);
+                     margin-bottom: 0.5em;
+                 }
+
+                 .reveal h2 {
+                     font-size: 1.8em;
+                     color: var(--adwaita-dark-blue);
+                     margin-bottom: 0.6em;
+                 }
+
+                 .reveal h3 {
+                     font-size: 1.4em;
+                     color: var(--adwaita-accent);
+                 }
+
+                 .reveal .slides section {
+                     padding: 40px;
+                     background: var(--adwaita-surface);
+                     border-radius: 12px;
+                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                     margin: 20px;
+                 }
+
+                 .reveal ul, .reveal ol {
+                     margin: 1em 0;
+                 }
+
+                 .reveal li {
+                     margin: 0.5em 0;
+                     padding-left: 0.5em;
+                 }
+
+                 .reveal ul li::marker {
+                     color: var(--adwaita-accent);
+                 }
+
+                 .reveal table {
+                     width: 100%;
+                     border-collapse: separate;
+                     border-spacing: 0;
+                     border: 1px solid var(--adwaita-border);
+                     border-radius: 8px;
+                     overflow: hidden;
+                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                 }
+
+                 .reveal th {
+                     background: var(--adwaita-light-blue);
+                     color: var(--adwaita-text);
+                     font-weight: 600;
+                     padding: 12px;
+                     text-align: center;
+                     font-size: 1.1em;
+                     border-bottom: 2px solid var(--adwaita-blue);
+                 }
+
+                 .reveal td {
+                     text-align: center;
+                     padding: 10px 12px;
+                     font-size: 1em;
+                     border-bottom: 1px solid var(--adwaita-gray);
+                 }
+
+                 .reveal tr:nth-child(even) td {
+                     background: #f8f9fa;
+                 }
+
+                 .reveal tr:hover td {
+                     background: var(--adwaita-light-blue);
+                     transition: background-color 0.2s ease;
+                 }
+
+                 .chart-container {
+                     width: 30%;
+                     max-width: 350px;
+                     display: flex;
+                     flex-direction: column;
+                     justify-content: flex-start;
+                     align-items: center;
+                     margin-bottom: 40px;
+                     background: var(--adwaita-background);
+                     border-radius: 8px;
+                     padding: 10px;
+                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                 }
+
+                 .chart-container canvas {
+                     width: 100% !important;
+                     height: auto !important;
+                 }
+
+                 .small-text {
+                     position: relative;
+                     top: -100px;
+                     color: var(--adwaita-dark-gray);
+                 }
+
+                 /* Enhanced button-like elements */
+                 .reveal .fragment {
+                     transition: all 0.3s ease;
+                 }
+
+                 /* Adwaita-style highlights */
+                 .reveal .progress {
+                     color: var(--adwaita-blue);
+                 }
+
+                 /* Custom styling for comparison table */
+                 .fit-table {
+                     font-family: 'Cantarell', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                     border-radius: 8px;
+                     overflow: hidden;
+                 }
+
+                 .fit-table th, .fit-table td {
+                     padding: 8px 12px;
+                     font-size: 11px;
+                     line-height: 1.3;
+                     word-break: break-word;
+                 }
+
+                 .fit-table th {
+                     background: var(--adwaita-blue);
+                     color: white;
+                     font-weight: 600;
+                 }
+
+                 .mistral-col {
+
+                 }
+
+                 /* Highlighting rules: triggered by the single fragment */
+                 .fragment.visible + .table-wrapper .mistral-col,
+                 .fragment.visible ~ .table-wrapper .mistral-col {
+                     background: var(--adwaita-accent) !important;
+                     color: white !important;
+                     border: 1px solid var(--adwaita-dark-blue);
+                     box-shadow: 0 0 10px rgba(28, 113, 216, 0.3);
+                 }
+
+                 .fragment.visible + .table-wrapper .fit-table td:not(.mistral-col),
+                 .fragment.visible + .table-wrapper .fit-table th:not(.mistral-col) {
+                     opacity: 0.5;
+                     filter: grayscale(0.3);
+                 }
+
+                 .explain {
+                     position: relative; /* required for pseudo-element positioning */
+                     display: inline-block;
+                     padding: 10px 14px;
+                     background: linear-gradient(135deg, var(--adwaita-blue), var(--adwaita-accent)) !important;
+                     color: white !important;
+                     border-radius: 12px !important;
+                     box-shadow: 0 4px 12px rgba(28, 113, 216, 0.3) !important;
+                     font-weight: 500;
+                     border: 1px solid var(--adwaita-light-blue);
+                     pointer-events: auto;
+                     z-index: 10;
+                 }
+
+                 /* base pseudo-element */
+                 .explain::after {
+                     content: "";
+                     position: absolute;
+                     width: 0;
+                     height: 0;
+                     border-style: solid;
+                     /* no default border-width/color here — set in directional rules */
+                 }
+
+                 /* DOWN arrow (below the box) */
+                 .explain.arrow-down::after {
+                     left: 30%;
+                     transform: translateX(-50%);
+                     bottom: calc(-1 * var(--explain-arrow-size)); /* sit below the box */
+                     border-width: var(--explain-arrow-size) var(--explain-arrow-size) 0 var(--explain-arrow-size); /* top right bottom left */
+                     border-color: var(--explain-arrow-color) transparent transparent transparent;
+                 }
+
+                 /* UP arrow (above the box) */
+                 .explain.arrow-up::after {
+                     left: 50%;
+                     transform: translateX(-50%);
+                     top: calc(-1 * var(--explain-arrow-size)); /* sit above the box */
+                     border-width: 0 var(--explain-arrow-size) var(--explain-arrow-size) var(--explain-arrow-size); /* top right bottom left */
+                     border-color: transparent transparent var(--explain-arrow-color) transparent;
+                 }
+
+                 /* LEFT arrow (to the left) */
+                 .explain.arrow-left::after {
+                     top: 30%;
+                     transform: translateY(-50%);
+                     left: calc(-1 * var(--explain-arrow-size)); /* sit to the left */
+                     border-width: var(--explain-arrow-size) var(--explain-arrow-size) var(--explain-arrow-size) 0; /* top right bottom left */
+                     border-color: transparent var(--explain-arrow-color) transparent transparent;
+                 }
+
+                 /* RIGHT arrow (to the right) */
+                 .explain.arrow-right::after {
+                     top: 50%;
+                     transform: translateY(-50%);
+                     right: calc(-1 * var(--explain-arrow-size)); /* sit to the right */
+                     border-width: var(--explain-arrow-size) 0 var(--explain-arrow-size) var(--explain-arrow-size); /* top right bottom left */
+                     border-color: transparent transparent transparent var(--explain-arrow-color);
+                 }
+
+                 /* Image styling */
+                 .reveal img {
+                     border-radius: 8px;
+                     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                 }
+
+                 /* Animation improvements */
+                 .reveal .slides section[data-auto-animate] {
+                     transition: all 0.4s ease;
+                 }
+                </style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+			    <section>
+                                <h1>Improving Pricing Coverage of Small Chains using LLMs</h1>
+                                <p>A proof of concept; status & next steps</p>
+                            </section>
+                            <section>
+                                <h2>The Problem</h2>
+                                <ul>
+                                    <li>Many small chains</li>
+                                    <li>Difficult to create many small individual scrapers (diminishing returns)</li>
+                                </ul>
+                                <h2>The Idea</h2>
+                                <ul>
+                                    <li>Using LLMs to create automated scrapers that can pick up the pricing info</li>
+                                </ul>
+                                <p>This concept can be spread to other domains wherever the data is semi-structured or structured.</p>
+                            </section>
+                            <!-- <section data-auto-animate>
+                                 <img src="./res/scr1.png" data-id="screenshot-1" style="width: 100%;" />
+                                 </section>
+                                 <section data-auto-animate>
+                                 <div style="display: flex; justify-content: space-between;">
+                                 <img src="./res/scr1.png" data-id="screenshot-1" style="width: 15%; opacity: 0.5;" />
+                                 <img src="screenshot2.jpg" data-id="screenshot-2" style="width: 80%;" />
+                                 </div>
+                                 </section> -->
+                            <!-- <section data-auto-animate>
+                                 <div style="display: flex; justify-content: space-between;">
+                                 <img src="./res/scr1.png" data-id="screenshot-1" style="width: 15%; opacity: 0.5;" />
+                                 <img src="screenshot2.jpg" data-id="screenshot-2" style="width: 15%; opacity: 0.5;" />
+                                 <img src="screenshot3.jpg" data-id="screenshot-3" style="width: 65%;" />
+                                 </div>
+                                 </section> -->
+                            <section data-auto-animate>
+                                <div style="position: relative; width: 100%; height: 100%; color:var(--adwaita-gray)">
+                                    <img src="./res/scr1.png">
+
+                                    <!-- Must be inline-block to let Reveal interpolate size -->
+                                    <span data-id="product-1" style="position: absolute; top: 3%; left: 3%; display:inline-block; opacity:0.1;">5x5</span>
+                                    <span data-id="price-1"   style="position: absolute; top: 5%; left: 50%; display:inline-block; opacity:0.1;">20</span>
+
+                                    <span data-id="product-2" style="position: absolute; top: 13%; left: 3%; display:inline-block; opacity:0.1;">5x5</span>
+                                    <span data-id="price-2"   style="position: absolute; top: 15%; left: 50%; display:inline-block; opacity:0.1;">30</span>
+
+                                    <span data-id="product-3" style="position: absolute; top: 23%; left: 3%; display:inline-block; opacity:0.1;">5x10</span>
+                                    <span data-id="price-3"   style="position: absolute; top: 25%; left: 50%; display:inline-block; opacity:0.1;">30</span>
+
+                                    <span data-id="product-4" style="position: absolute; top: 33%; left: 3%; display:inline-block; opacity:0.1;">10x5</span>
+                                    <span data-id="price-4"   style="position: absolute; top: 35%; left: 50%; display:inline-block; opacity:0.1;">32</span>
+
+                                    <span data-id="product-5" style="position: absolute; top: 43%; left: 3%; display:inline-block; opacity:0.1;">5x15</span>
+                                    <span data-id="price-5"   style="position: absolute; top: 45%; left: 50%; display:inline-block; opacity:0.1;">36</span>
+
+                                    <span data-id="product-6" style="position: absolute; top: 53%; left: 3%; display:inline-block; opacity:0.1;">7.5x10</span>
+                                    <span data-id="price-6"   style="position: absolute; top: 55%; left: 50%; display:inline-block; opacity:0.1;">42</span>
+
+                                    <span data-id="product-7" style="position: absolute; top: 63%; left: 3%; display:inline-block; opacity:0.1;">10x10</span>
+                                    <span data-id="price-7"   style="position: absolute; top: 65%; left: 50%; display:inline-block; opacity:0.1;">55</span>
+
+                                    <span data-id="product-8" style="position: absolute; top: 73%; left: 3%; display:inline-block; opacity:0.1;">10x20</span>
+                                    <span data-id="price-8"   style="position: absolute; top: 75%; left: 50%; display:inline-block; opacity:0.1;">165</span>
+
+                                    <span data-id="product-9" style="position: absolute; top: 83%; left: 3%; display:inline-block; opacity:0.1;">10x20</span>
+                                    <span data-id="price-9"   style="position: absolute; top: 85%; left: 50%; display:inline-block; opacity:0.1;">175</span>
+                                </div>
+                            </section>
+                            <section data-auto-animate>
+                                <h2>Extracted Data</h2>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Size</th>
+                                            <th>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span data-id="product-1" style="display:inline-block;">5x5</span></td>
+                                            <td><span data-id="price-1" style="display:inline-block;">20</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-2" style="display:inline-block;">5x5</span></td>
+                                            <td><span data-id="price-2" style="display:inline-block;">30</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-3" style="display:inline-block;">5x10</span></td>
+                                            <td><span data-id="price-3" style="display:inline-block;">30</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-4" style="display:inline-block;">10x5</span></td>
+                                            <td><span data-id="price-4" style="display:inline-block;">32</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-5" style="display:inline-block;">5x15</span></td>
+                                            <td><span data-id="price-5" style="display:inline-block;">36</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-6" style="display:inline-block;">7.5x10</span></td>
+                                            <td><span data-id="price-6" style="display:inline-block;">42</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-7" style="display:inline-block;">10x10</span></td>
+                                            <td><span data-id="price-7" style="display:inline-block;">55</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-8" style="display:inline-block;">10x20</span></td>
+                                            <td><span data-id="price-8" style="display:inline-block;">165</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-9" style="display:inline-block;">10x20</span></td>
+                                            <td><span data-id="price-9" style="display:inline-block;">175</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                            <section data-auto-animate>
+                                <div style="position: relative; width: 100%; height: 100%; color:var(--adwaita-gray)">
+                                    <img src="./res/scr3.png">
+
+                                    <!-- Must be inline-block to let Reveal interpolate size -->
+                                    <span data-id="product-1" style="position: absolute; top: 5%; left: 20%; display:inline-block; opacity:0.1;">5x5</span>
+                                    <span data-id="price-1"   style="position: absolute; top: 6%; left: 60%; display:inline-block; opacity:0.1;">40</span>
+
+                                    <span data-id="product-2" style="position: absolute; top: 22%; left: 20%; display:inline-block; opacity:0.1;">5x8</span>
+                                    <span data-id="price-2"   style="position: absolute; top: 25%; left: 60%; display:inline-block; opacity:0.1;">65</span>
+
+                                    <span data-id="product-3" style="position: absolute; top: 40%; left: 20%; display:inline-block; opacity:0.1;">5x10</span>
+                                    <span data-id="price-3"   style="position: absolute; top: 45%; left: 60%; display:inline-block; opacity:0.1;">32</span>
+
+                                    <span data-id="product-4" style="position: absolute; top: 70%; left: 20%; display:inline-block; opacity:0.1;">5x10</span>
+                                    <span data-id="price-4"   style="position: absolute; top: 70%; left: 60%; display:inline-block; opacity:0.1;">53</span>
+
+                                    <span data-id="product-5" style="position: absolute; top: 84%; left: 20%; display:inline-block; opacity:0.1;">8x10</span>
+                                    <span data-id="price-5"   style="position: absolute; top: 84%; left: 60%; display:inline-block; opacity:0.1;">95</span>
+                                </div>
+                            </section>
+                            <section data-auto-animate>
+                                <h2>Extracted Data</h2>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Size</th>
+                                            <th>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span data-id="product-1" style="display:inline-block;">5x5</span></td>
+                                            <td><span data-id="price-1" style="display:inline-block;">40</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-2" style="display:inline-block;">5x8</span></td>
+                                            <td><span data-id="price-2" style="display:inline-block;">65</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-3" style="display:inline-block;">5x10</span></td>
+                                            <td><span data-id="price-3" style="display:inline-block;">32</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-4" style="display:inline-block;">5x10</span></td>
+                                            <td><span data-id="price-4" style="display:inline-block;">53</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span data-id="product-5" style="display:inline-block;">8x10</span></td>
+                                            <td><span data-id="price-5" style="display:inline-block;">95</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </section>
+                            <section>
+                                <p>In total there are more than 10,000 such sites. We implemented a PoC that ran on 100 randomly selected sites.</p>
+                            </section>
+                            <section>
+                                <p class="small-text">Key Findings</p>
+                                <ul class="small-text">
+                                    <li>LLMs can extract structured data</li>
+                                    <li>Automation reduces engineering effort</li>
+                                    <li>Works across many domains</li>
+                                </ul>
+
+                                <!-- Each canvas is its own fragment -->
+                                <div style="display: flex; justify-content: space-around; margin-bottom: 30px;">
+                                    <div class="chart-container">
+                                        <span style="margin-bottom: 5px; color: var(--adwaita-dark-gray); font-size: 0.5em; font-weight: 500;">Model Accuracy (%)</span>
+                                        <canvas id="barChart"></canvas>
+                                    </div>
+                                    <div class="chart-container">
+                                        <span style="margin-bottom: 5px; color: var(--adwaita-dark-gray); font-size: 0.5em; font-weight: 500;">Mistral 7b Accuracy</span>
+                                        <canvas id="pieChart"></canvas>
+                                    </div>
+                                </div>
+                            </section>
+                            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                            <section>
+                                <h3 style="margin-bottom:8px;">Comparison Table</h3>
+
+                                <!-- SINGLE fragment trigger (invisible) -->
+                                <!-- Make sure this is immediately BEFORE the table-wrapper so CSS sibling selectors work -->
+                                <span class="fragment" aria-hidden="true" style="display:inline-block;width:0;height:0;line-height:0;margin:0;padding:0"></span>
+
+                                <div class="table-wrapper" style="width:100%;">
+
+                                    <table class="fit-table" style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; text-align:center;" border="1">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="3">Manual</th>
+                                                <th colspan="2" class="mistral-col">Mistral 7B</th>
+                                                <th colspan="2">Gemma 3 1B</th>
+                                                <th colspan="2">Gemma 3 4B</th>
+                                            </tr>
+                                            <tr>
+                                                <th>Price</th><th>Length</th><th>Width</th>
+                                                <th class="mistral-col">Price</th><th class="mistral-col">Size</th>
+                                                <th>Price</th><th>Size</th>
+                                                <th>Price</th><th>Size</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <tr><td>56</td><td>8</td><td>10</td><td class="mistral-col">56</td><td class="mistral-col">8 × 10</td><td>49</td><td>5 × 15</td><td>56</td><td>8 × 10</td></tr>
+                                            <tr><td>59</td><td>10</td><td>10</td><td class="mistral-col">59</td><td class="mistral-col">10 × 10</td><td>51.5</td><td>5 × 5</td><td>59</td><td>10 × 10</td></tr>
+                                            <tr><td>77</td><td>10</td><td>14</td><td class="mistral-col">77</td><td class="mistral-col">10 × 14</td><td>54.5</td><td>5 × 10</td><td>77</td><td>10 × 14</td></tr>
+                                            <tr><td>122</td><td>10</td><td>30</td><td class="mistral-col">122</td><td class="mistral-col">10 × 30</td><td>62</td><td>5 × 10</td><td>122</td><td>10 × 30</td></tr>
+                                            <tr><td>70</td><td>5</td><td>5</td><td class="mistral-col">70</td><td class="mistral-col">5 × 5</td><td>68</td><td>5 × 15</td><td>70</td><td>5 × 5</td></tr>
+                                            <tr><td>148</td><td>10</td><td>5</td><td class="mistral-col">148</td><td class="mistral-col">10 × 5</td><td>122</td><td>5 × 15</td><td>148</td><td>10 × 5</td></tr>
+                                            <tr><td>134</td><td>10</td><td>10</td><td class="mistral-col">134</td><td class="mistral-col">10 × 10</td><td>138</td><td>5 × 5</td><td>134</td><td>10 × 10</td></tr>
+                                            <tr><td>161</td><td>10</td><td>15</td><td class="mistral-col">161</td><td class="mistral-col">10 × 15</td><td>149</td><td>5 × 10</td><td>161</td><td>10 × 15</td></tr>
+                                            <tr><td>169</td><td>10</td><td>10</td><td class="mistral-col">—</td><td class="mistral-col">—</td><td>172</td><td>5 × 15</td><td>—</td><td>—</td></tr>
+                                            <tr><td>49</td><td>5</td><td>5</td><td class="mistral-col">49</td><td class="mistral-col">5 × 5</td><td colspan="2">Opens in new tab</td><td>49</td><td>5 × 5</td></tr>
+                                            <tr><td>49</td><td>5</td><td>5</td><td class="mistral-col">—</td><td class="mistral-col">—</td><td colspan="2">unit_size</td><td>49</td><td>6 × 5</td></tr>
+                                            <tr><td>79</td><td>5</td><td>5</td><td class="mistral-col">79</td><td class="mistral-col">5 × 5</td><td colspan="2">Medium Units from $120</td><td>49</td><td>7 × 5</td></tr>
+                                            <tr><td>79</td><td>5</td><td>10</td><td class="mistral-col">79</td><td class="mistral-col">5 × 10</td><td colspan="2">Large Units from $262</td><td>79</td><td>8 × 5</td></tr>
+                                            <tr><td>119</td><td>5</td><td>10</td><td class="mistral-col">—</td><td class="mistral-col">—</td><td colspan="2">Medium Units from $106</td><td>79</td><td>9 × 5</td></tr>
+                                            <tr><td>79</td><td>10</td><td>5</td><td class="mistral-col">79</td><td class="mistral-col">10 × 5</td><td colspan="2">Large Units from $274</td><td>79</td><td>10 × 5</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                            <section>
+                                <img src="res/dia.png" alt="Diagram" style="width:70%;">
+
+                                <!-- Fragment 1 -->
+                                <div class="explain arrow-right fragment fade-in" data-fragment-index="1"
+                                     style="position:absolute; top:20%; left:-7%;
+                                            padding:10px 15px;">
+                                    URLs are used from DB
+                                </div>
+
+                                <!-- Fragment 2 -->
+                                <div class="explain arrow-down fragment fade-in" data-fragment-index="2"
+                                     style="position:absolute; top:-2%; left:22%;
+                                            padding:10px 15px;">
+                                    Headless Browser will,<br/> enable dynamic content.
+                                </div>
+
+                                <!-- Fragment 3 -->
+                                <div class="explain arrow-down fragment fade-in" data-fragment-index="3"
+                                     style="position:absolute; top:-8%; left:50%;
+                                            padding:10px 15px;">
+                                    Ollama models are <br/>locally hosted,<br/> free of charge.
+                                </div>
+
+                                <div class="explain arrow-left fragment fade-in" data-fragment-index="4"
+                                     style="position:absolute; top:40%; left:70%;
+                                            padding:10px 15px;">
+                                    Data extraction can be customised for different needs.
+                                </div>
+                            </section>
+                            <section>
+                                <h2>Where PoC Fails to Deliver</h2>
+                                <p>Due to the modular nature of the POC each component can be optimised separately which can further increase the accuracy of the results. Some shortcomings that were noticed are:</p>
+                                <ul>
+                                    <li>URLs in the DB that do not point to pricing page,</li>
+                                    <li>Content that is dynamically loaded using JavaScript</li>
+                                    <li>Complex designs that confuse the models</li>
+                                </ul>
+                                <p>If optimised, hallucinations induced due to these factors can be reduced.</p>
+                            </section>
+                            <section>
+                                <h3>Going from the POC to the product: An Aspirational Chart</h3>
+                                <ul>
+                                    <li class="fragment">Improving headless browser to asynchronously load content.</li>
+                                    <li class="fragment">Improving headless browser to click pricing button if prices are not present on the page.</li>
+                                    <li class="fragment">Store hashes of the website to skip unchanged websites.</li>
+                                    <li class="fragment">Optimise the prompt given to LLM to better extract the data.</li>
+                                </ul>
+                            </section>
+                            <section>
+                                <div>
+                                    <h1 style="margin-bottom: 1em;">Thank You!</h1>
+                                    <h3>Questions & Discussion</h3>
+                                </div>
+                            </section>
+			</div>
+		</div>
+
+                <script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+                <script>
+                 Reveal.initialize({
+                     hash: true,
+                     plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+                 });
+                </script>
+
+                <!-- Load Chart.js after Reveal is ready -->
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+                <script>
+                 function initBarChart() {
+                     new Chart(document.getElementById('barChart'), {
+                         type: 'bar',
+                         data: {
+                             labels: ['Mistral 7b', 'Gemma3 4b', 'Gemma3 1b'],
+                             datasets: [{
+                                 label: 'Accuracy',
+                                 data: [82.29, 55.11, 23.69],
+                                 backgroundColor: ['#1c71d8', '#3584e4', '#1a5fb4']
+                             }]
+                         },
+                         plugins: [ChartDataLabels],
+                         options: {
+                             animation: { duration: 1500 },
+                             plugins: {
+                                 legend: { display: false },
+                                 tooltip: { enabled: false },
+                                 datalabels: {
+                                     anchor: 'end',
+                                     align: 'top',
+                                     color: '#2e3436',
+                                     font: {
+                                         weight: 'bold',
+                                         size: 12
+                                     },
+                                     formatter: function(value) {
+                                         return value + '%';
+                                     }
+                                 }
+                             },
+                             scales: {
+                                 y: {
+                                     beginAtZero: true,
+                                     max: 100,
+                                     grid: { color: '#deddda' },
+                                     ticks: {
+                                         color: '#2e3436',
+                                         callback: function(value) {
+                                             return value + '%';
+                                         }
+                                     }
+                                 },
+                                 x: {
+                                     grid: { color: '#deddda' },
+                                     ticks: { color: '#2e3436' }
+                                 }
+                             }
+                         }
+                     });
+                 }
+
+                 function initPieChart() {
+                     new Chart(document.getElementById('pieChart'), {
+                         type: 'pie',
+                         data: {
+                             labels: ['True', 'False'],
+                             datasets: [{
+                                 data: [82, 18],
+                                 backgroundColor: ['#1c71d8', '#3584e4']
+                             }]
+                         },
+                         plugins: [ChartDataLabels],
+                         options: {
+                             animation: { animateScale: true, duration: 1500 },
+                             plugins: {
+                                 legend: {
+                                     display: true,
+                                     position: 'bottom',
+                                     labels: {
+                                         color: '#2e3436',
+                                         padding: 10,
+                                         font: {
+                                             size: 10
+                                         }
+                                     }
+                                 },
+                                 tooltip: { enabled: false },
+                                 datalabels: {
+                                     color: 'white',
+                                     font: {
+                                         weight: 'bold',
+                                         size: 14
+                                     },
+                                     formatter: function(value) {
+                                         return value + '%';
+                                     }
+                                 }
+                             }
+                         }
+                     });
+                 }
+
+                 Reveal.on('slidechanged', event => {
+                     if (event.currentSlide.querySelector('#barChart')) {
+                         initBarChart();
+                         initPieChart();
+                     }
+                 });
+                </script>
+		<script>
+		 // More info about initialization & config:
+		 // - https://revealjs.com/initialization/
+		 // - https://revealjs.com/config/
+		 Reveal.initialize({
+		     hash: true,
+		     // Enable PDF export
+		     pdfMaxPagesPerSlide: 1,
+		     pdfSeparateFragments: false,
+
+		     // Learn about plugins: https://revealjs.com/plugins/
+		     plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+		 });
+		</script>
+	</body>
+</html>
